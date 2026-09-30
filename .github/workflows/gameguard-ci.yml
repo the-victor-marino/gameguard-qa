@@ -7,16 +7,15 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Python ${{ matrix.python-version }} QA suite
+  quality:
+    name: Python ${{ matrix.python-version }} quality gate
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -27,10 +26,16 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
 
-      - name: Run GameGuard QA suite
-        run: pytest --cov=game --cov-report=term-missing --cov-report=xml:reports/coverage.xml --junitxml=reports/results.xml
+      - name: Prepare reports
+        run: mkdir -p reports
 
-      - name: Upload QA reports
+      - name: Run automated QA suite
+        run: pytest --cov=game --cov=gameguard --cov-report=term-missing --cov-report=xml:reports/coverage.xml --junitxml=reports/results.xml
+
+      - name: Run release quality gate
+        run: python -m gameguard.quality_gate.gate | tee reports/quality-gate.txt
+
+      - name: Upload QA evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
