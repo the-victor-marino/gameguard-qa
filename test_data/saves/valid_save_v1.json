@@ -1,0 +1,17 @@
+{
+  "save_version": 1,
+  "player": {
+    "level": 12,
+    "health": 85,
+    "position": {"map_id": "forest_01", "x": 142.5, "y": 87.2}
+  },
+  "inventory": [
+    {"item_id": "iron_sword", "quantity": 1, "unique": true},
+    {"item_id": "health_potion", "quantity": 4, "unique": false}
+  ],
+  "currency": 1250,
+  "quests": {
+    "tutorial": "completed",
+    "forest_guardian": "active"
+  }
+}
