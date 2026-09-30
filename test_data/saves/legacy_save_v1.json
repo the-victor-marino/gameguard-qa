@@ -1,0 +1,14 @@
+{
+  "save_version": 1,
+  "player": {
+    "level": 27,
+    "health": 63,
+    "position": {"map_id": "castle_02", "x": 18.0, "y": 44.5}
+  },
+  "inventory": [
+    {"item_id": "moonblade", "quantity": 1, "unique": true},
+    {"item_id": "mana_potion", "quantity": 7, "unique": false}
+  ],
+  "currency": 4820,
+  "quests": {"tutorial": "completed", "royal_audience": "active"}
+}
