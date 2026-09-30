@@ -1,0 +1,16 @@
+{
+  "save_version": 1,
+  "player": {
+    "level": 0,
+    "health": -500,
+    "position": {"map_id": "", "x": 0, "y": 0}
+  },
+  "inventory": [
+    {"item_id": "legendary_key", "quantity": 1, "unique": true},
+    {"item_id": "legendary_key", "quantity": 1, "unique": true}
+  ],
+  "currency": -999,
+  "quests": {
+    "tutorial": "almost_completed"
+  }
+}
