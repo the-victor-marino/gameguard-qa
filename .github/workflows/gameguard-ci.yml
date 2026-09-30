@@ -35,6 +35,9 @@ jobs:
       - name: Run release quality gate
         run: python -m gameguard.quality_gate.gate | tee reports/quality-gate.txt
 
+      - name: Generate build quality report
+        run: python -m gameguard.reporting.report --output reports/quality-report.md
+
       - name: Upload QA evidence
         if: always()
         uses: actions/upload-artifact@v4
