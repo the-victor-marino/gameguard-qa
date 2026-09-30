@@ -9,7 +9,7 @@ FIXTURES = Path("test_data/saves")
 
 @pytest.mark.destructive
 def test_known_good_save_is_safe():
-    report = inspect_save(FIXTURES / "valid_save_v1.json")
+    report = inspect_save(FIXTURES / "valid_save_v2.json")
 
     assert report.is_safe
     assert report.issues == ()
