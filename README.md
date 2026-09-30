@@ -1,88 +1,153 @@
 # GameGuard QA
 
-**Automated quality gates for game builds.**
+[![GameGuard QA](https://github.com/the-victor-marino/gameguard-qa/actions/workflows/gameguard-ci.yml/badge.svg)](https://github.com/the-victor-marino/gameguard-qa/actions/workflows/gameguard-ci.yml)
+![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue)
+![pytest](https://img.shields.io/badge/test-pytest-blue)
+![Game QA](https://img.shields.io/badge/focus-Game%20QA-blueviolet)
 
-GameGuard QA is a compact Game QA Engineering portfolio project that models a single-player RPG persistence pipeline and automatically detects **save corruption, progression regressions, backward-compatibility failures, and performance regressions before release**.
+**Catch progression-breaking defects before players do.**
 
-The game is deliberately small. The product demonstrated here is the **QA strategy, automation, diagnostics, and release evidence**.
+GameGuard QA is a compact **Game QA Engineering** project that protects persistent player state and detects build regressions before release.
 
-## The problem
+> A build can launch successfully and still lose a player's inventory, corrupt progression, or become noticeably slower. GameGuard turns those risks into automated release criteria.
 
-A game build can launch and pass smoke testing while still damaging the player experience:
+## At a glance
 
-- an update loads an old save but silently removes inventory;
-- corrupted progression enters the game;
-- a quest is persisted in an impossible state;
-- a unique item is duplicated;
-- load time or frame-time degrades between builds.
+- **30 automated tests** across unit, integration, destructive, regression, and performance layers
+- **Save Guardian** with stable defect IDs, severity, and exact JSON paths
+- **v1 → v2 backward-compatibility testing** with progression-preservation checks
+- **Performance budgets** for load time, p95 frame time, and memory
+- **Automated quality gate** returning PASS/FAIL for CI
+- **GitHub Actions** on Python 3.11 and 3.12
+- **Automated QA evidence**: JUnit, coverage XML, CLI gate output, and Markdown build report
 
-GameGuard turns those risks into automated release criteria.
+## What can go wrong?
+
+| Risk | Example | GameGuard response |
+| --- | --- | --- |
+| Save corruption | Health = -500 | Block release |
+| Economy integrity | Currency = -999 | Block release |
+| Inventory exploit | Duplicate unique item | Block release |
+| Progression corruption | Illegal quest state | Block release |
+| Update regression | v1 → v2 loses inventory | Block release |
+| Performance regression | Load time +30% | Block release |
 
 ## Quality pipeline
 
 ```text
-Game Build / Test Data
-        |
-        +--> Save Guardian --------> corruption / state integrity
-        |
-        +--> Save Migration -------> v1 -> v2 compatibility
-        |                              + progression preservation
-        |
-        +--> Performance ----------> baseline vs current build
-        |
-        +--------------------------> QUALITY GATE
-                                        |
-                                  PASS / FAIL
-                                        |
-                                  GitHub Actions
+                  GAME BUILD / TEST DATA
+                           |
+             +-------------+-------------+
+             |                           |
+             v                           v
+       SAVE GUARDIAN              PERFORMANCE ANALYZER
+             |                           |
+       state integrity              baseline comparison
+             |
+       SAVE MIGRATION
+             |
+      v1 -> v2 compatibility
+             |
+    progression preservation
+             +-------------+-------------+
+                           |
+                           v
+                    QUALITY GATE
+                    /           \
+                 PASS           FAIL
+                   |              |
+                   +------ CI ----+
+                          |
+              reports + coverage + evidence
 ```
 
-## Implemented milestones
+## Example: defective save
 
-### 1. Core game state
-A deterministic RPG domain model covering player level/health, position, inventory, currency, quests, difficulty, and experience. Domain invariants are validated before persistence.
+```text
+GAMEGUARD QA — SAVE GUARDIAN
+Status: FAIL
 
-### 2. Save Guardian
-Non-destructive save inspection with stable defect codes, severity, JSON paths, and actionable messages. Destructive tests cover malformed, empty, missing, and logically corrupted saves.
+[HIGH] SAVE-005 $.player.health
+  Player health is outside 0-100
 
-### 3. Backward compatibility
-A versioned **v1 → v2** migration introduces new fields while regression tests verify that player level, health, position, currency, quests, and owned inventory survive the update.
+[HIGH] SAVE-008 $.currency
+  Currency must be a non-negative integer
 
-### 4. Performance regression
-Build metrics are compared with a known baseline using explicit budgets for load time, p95 frame time, and memory usage. A deliberately regressed fixture proves the detector fails when it should.
+[HIGH] SAVE-011 $.inventory[1]
+  Duplicate unique item: legendary_key
+```
 
-### 5. Release quality gate
-Independent QA signals are consolidated into one CI-compatible decision with release blockers and exit code 0/1.
+The diagnostic answers four questions a developer needs: **what failed, where, how severe it is, and which stable defect code identifies it.**
 
-### 6. CI/CD evidence
-GitHub Actions runs the complete suite on Python 3.11 and 3.12, generates JUnit and coverage XML, executes the release quality gate, and uploads the evidence as workflow artifacts.
+## Backward compatibility
 
-## Test taxonomy
+Version 2 adds experience, difficulty, and equipment state. A legacy v1 save is migrated before loading.
+
+```text
+v1 save
+   |
+   v
+migration
+   |
+   +-- add v2 defaults
+   |
+   +-- preserve level / health / position
+   +-- preserve currency / quests
+   +-- preserve inventory ownership
+   |
+   v
+v2 GameState
+```
+
+A save merely loading is not enough: regression tests verify that player-owned progression survives the update.
+
+## Performance regression
+
+Performance fixtures model build telemetry and compare the current build against a known baseline.
+
+| Metric | Regression budget |
+| --- | ---: |
+| Load time | ≤ 10% |
+| p95 frame time | ≤ 10% |
+| Memory | ≤ 15% |
+
+The intentionally regressed fixture exceeds every budget, proving the detector can fail when it should.
+
+## Test architecture
 
 ```text
 tests/
-├── unit/          # domain rules and boundary values
-├── integration/   # persistence and quality-gate behavior
-├── destructive/   # intentionally damaged save data
-├── regression/    # save compatibility and progression preservation
-└── performance/   # deterministic performance budgets
+├── unit/          domain rules, boundaries, reporting
+├── integration/   save/load and release quality gate
+├── destructive/   corrupted and malformed saves
+├── regression/    migration and progression preservation
+└── performance/   deterministic performance budgets
 ```
 
-## QA techniques demonstrated
+Techniques demonstrated include **risk-based testing, Boundary Value Analysis, Equivalence Partitioning, state/invariant validation, negative testing, destructive testing, data-integrity testing, backward-compatibility testing, regression testing, and performance-budget testing.**
 
-- Risk-based testing
-- Boundary Value Analysis
-- Equivalence Partitioning
-- State and invariant validation
-- Negative and destructive testing
-- Data-integrity testing
-- Integration testing
-- Backward-compatibility testing
-- Regression testing
-- Performance-budget testing
-- CI quality gates
+## Build Quality Report
 
-## Try it
+CI generates a human-readable report for every run:
+
+```text
+GameGuard QA — Build Quality Report
+
+Overall Status: PASS
+
+Save integrity          PASS
+Performance regression PASS
+
+load_time_ms            +3.9%   PASS
+frame_time_p95_ms       +1.8%   PASS
+memory_mb               +2.1%   PASS
+
+Release Decision: APPROVED
+```
+
+The report is uploaded with the workflow's JUnit and coverage evidence.
+
+## Run it
 
 ```bash
 git clone https://github.com/the-victor-marino/gameguard-qa.git
@@ -91,31 +156,35 @@ python -m pip install -r requirements.txt
 pytest
 ```
 
-Inspect a corrupted save:
+Try the intentionally corrupted save:
 
 ```bash
 python -m gameguard.save_guard.cli test_data/saves/corrupted_save.json
 ```
 
-Run the release quality gate:
+Run the release gate:
 
 ```bash
 python -m gameguard.quality_gate.gate
 ```
 
-A safe release candidate returns **PASS** and exit code 0. Critical/high save defects or performance-budget violations return **FAIL** and a non-zero exit code.
+Generate the readable report:
 
-## Portfolio evidence
+```bash
+python -m gameguard.reporting.report
+```
 
-- [Test strategy](docs/TEST_STRATEGY.md)
-- [Save Guardian design](docs/SAVE_GUARDIAN.md)
+## QA documentation
+
+- [Test Strategy](docs/TEST_STRATEGY.md)
+- [Save Guardian Design](docs/SAVE_GUARDIAN.md)
 - [Architecture](docs/ARCHITECTURE.md)
-- [Example defect reports](docs/BUG_REPORTS.md)
-
-## Tech stack
-
-**Python 3.11+ · pytest · pytest-cov · GitHub Actions · JSON**
+- [Example Defect Reports](docs/BUG_REPORTS.md)
 
 ## Scope
 
-GameGuard does not claim to replace engine-level, platform-certification, graphical, usability, or exploratory testing. It demonstrates how targeted automation can protect high-risk game state and provide fast regression evidence alongside human Game QA.
+The demo RPG is intentionally minimal: **the QA system is the project**.
+
+GameGuard does not replace exploratory, usability, graphical, platform-certification, accessibility, or player-experience testing. It demonstrates how targeted automation can protect high-risk game state and provide fast regression evidence alongside human Game QA.
+
+**Stack:** Python 3.11+ · pytest · pytest-cov · GitHub Actions · JSON
