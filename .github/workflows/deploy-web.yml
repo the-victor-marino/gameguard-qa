@@ -52,21 +52,33 @@ jobs:
         env:
           GITHUB_PAGES: "true"
         run: npm run build
-      - name: Upload static website
-        if: github.event_name != 'pull_request'
+      - name: Install Chromium for browser smoke test
+        working-directory: web
+        run: npx playwright install chromium --with-deps
+      - name: Test real Python labs in browser
+        working-directory: web
+        run: npm run smoke
+      - name: Upload browser screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameguard-browser-smoke
+          path: web/browser-smoke.png
+          if-no-files-found: ignore
+      - name: Upload built website
         uses: actions/upload-artifact@v4
         with:
           name: gameguard-qa-lab-site
           path: web/dist/
       - name: Upload GitHub Pages artifact
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.event.repository.has_pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: web/dist/
 
   deploy:
     name: Publish on GitHub Pages
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.event.repository.has_pages
     needs: web-build
     runs-on: ubuntu-latest
     permissions:
