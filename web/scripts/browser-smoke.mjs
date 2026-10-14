@@ -56,7 +56,7 @@ try {
   await page.locator("button.lab-tab").nth(2).click();
   await page.getByRole("button",{name:"Regressed build",exact:true}).click();
   await page.getByRole("button",{name:/Check performance/}).click();
-  await page.getByText("PERFORMANCE REGRESSION").waitFor({timeout:30000});
+  await page.locator(".verdict").getByText("PERFORMANCE REGRESSION",{exact:true}).waitFor({timeout:30000});
   console.log("Performance checker detected the regression.");
 
   await page.locator("button.lab-tab").nth(3).click();
