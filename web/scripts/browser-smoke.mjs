@@ -23,10 +23,17 @@ try {
   browser = await chromium.launch({headless:true,args:["--no-sandbox"]});
   const page = await browser.newPage({viewport:{width:1440,height:900}});
   const errors = [];
-  page.on("pageerror", err => errors.push(err.message));
+  page.on("pageerror", err => { errors.push(err.message); console.error("[browser page error]",err.message); });
+  page.on("console", msg => { if (msg.type() === "error") console.error("[browser console]",msg.text()); });
+  page.on("requestfailed", req => console.error("[browser network]",req.url(),req.failure()?.errorText));
   console.log("Opening",url);
   await page.goto(url,{waitUntil:"domcontentloaded"});
-  await page.locator(".engine-indicator.ready").waitFor({timeout:180000});
+  await Promise.race([
+    page.locator(".engine-indicator.ready").waitFor({timeout:60000}),
+    page.locator(".engine-indicator.error").waitFor({timeout:60000}).then(async () => {
+      throw new Error("Python initialization error: " + await page.locator(".engine-alert.error").innerText());
+    }),
+  ]);
   console.log("Python runtime initialized.");
 
   await page.getByRole("button",{name:"Negative HP"}).click();
@@ -56,8 +63,9 @@ try {
   console.log("All end-to-end browser smoke checks passed.");
 } catch (err) {
   console.error(err);
+  try { if (browser) { const p=browser.contexts()[0]?.pages()[0]; if(p) await p.screenshot({path:"browser-smoke.png",fullPage:true}); } } catch(e) { console.error("Screenshot unavailable:",e); }
   process.exitCode=1;
 } finally {
-  await browser?.close();
+  if(browser) await Promise.race([browser.close(),sleep(8000)]);
   server.kill("SIGTERM");
 }
