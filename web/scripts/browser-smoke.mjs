@@ -54,7 +54,7 @@ try {
   console.log("Migration preservation detected the lost item.");
 
   await page.locator("button.lab-tab").nth(2).click();
-  await page.getByRole("button",{name:"Regressed build"}).click();
+  await page.getByRole("button",{name:"Regressed build",exact:true}).click();
   await page.getByRole("button",{name:/Check performance/}).click();
   await page.getByText("PERFORMANCE REGRESSION").waitFor({timeout:30000});
   console.log("Performance checker detected the regression.");
