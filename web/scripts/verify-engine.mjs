@@ -25,3 +25,8 @@ assert(code.includes("def inspect_save("), "Invalid Save Guardian source.");
 const gate = await readFile("public/engine/gameguard/quality_gate/gate.py", "utf8");
 assert(gate.includes("def evaluate_quality_gate("), "Invalid quality gate source.");
 console.log("QA engine package verified: " + source.python.length + " real Python modules and " + source.files.length + " mirrored repository files.");
+
+for (const asset of ["pyodide.mjs", "pyodide.asm.js", "pyodide.asm.wasm", "python_stdlib.zip", "pyodide-lock.json"]) {
+  await stat(join("public", "pyodide", asset));
+}
+console.log("Self-hosted Python runtime verified.");

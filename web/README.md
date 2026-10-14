@@ -19,7 +19,7 @@ The `predev` and `prebuild` scripts automatically copy the **real repository Pyt
 ## How the real QA engine works
 
 1. Vite serves the React/TypeScript single-page application.
-2. On load, a Web Worker downloads Pyodide (browser CPython) from the jsDelivr CDN.
+2. On load, a Web Worker loads a locally hosted Pyodide (browser CPython) runtime.
 3. The worker loads the repository's unmodified `game/` and `gameguard/` Python modules from the build-generated manifest.
 4. User edits and scenarios go to Python via worker messages; no save content is uploaded to a backend.
 5. **Save lab:** `gameguard.save_guard.validator.inspect_save` validates the raw save in a temporary virtual file.
@@ -48,7 +48,7 @@ If Pages is not enabled, the website's build job may pass while its deployment j
 
 ## Important constraints
 
-- Pyodide requires an internet connection on first load and access to jsDelivr.
+- Pyodide is hosted alongside the site; loading it requires downloading the browser Python/WASM assets on first visit.
 - The demo models a small RPG persistence pipeline, *not* a production engine integration.
 - Tests run using pytest in GitHub Actions; the interactive website executes the production Python QA modules, not the full pytest suite.
 - The HTML/JS UI is a teaching and inspection layer. GameGuard's Python sources remain the source of truth.

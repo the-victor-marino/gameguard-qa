@@ -1,14 +1,14 @@
 /* Run the repository's REAL Python QA modules in a browser-side Web Worker. */
 let pyodide;
 let queue = Promise.resolve();
-const CDN = "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/";
+
 
 function send(detail) { self.postMessage({ type: "progress", detail }); }
 async function bootstrap(baseUrl) {
   send("Loading Python runtime (first visit may take a moment)…");
-  const moduleUrl = CDN + "pyodide.mjs";
+  const moduleUrl = new URL("pyodide/pyodide.mjs", baseUrl).href;
   const mod = await import(/* @vite-ignore */ moduleUrl);
-  pyodide = await mod.loadPyodide({ indexURL: CDN });
+  pyodide = await mod.loadPyodide({ indexURL: new URL("pyodide/", baseUrl).href });
   send("Synchronizing the GameGuard Python modules…");
   const manifestResponse = await fetch(new URL("engine/manifest.json", baseUrl));
   if (!manifestResponse.ok) throw new Error("Could not load the repository file manifest.");

@@ -37,3 +37,10 @@ python.sort();
 files.sort();
 await writeFile(join(target, "manifest.json"), JSON.stringify({ python, files }, null, 2), "utf8");
 console.log("Synced " + files.length + " repository files, including " + python.length + " Python modules.");
+
+const runtime = resolve(process.cwd(), "public", "pyodide");
+await mkdir(runtime, { recursive: true });
+for (const asset of ["pyodide.mjs", "pyodide.js", "pyodide.asm.js", "pyodide.asm.wasm", "python_stdlib.zip", "pyodide-lock.json"]) {
+  await cp(resolve(process.cwd(), "node_modules", "pyodide", asset), join(runtime, asset));
+}
+console.log("Copied first-party-hosted Pyodide runtime assets.");
