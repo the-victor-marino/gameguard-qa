@@ -12,3 +12,5 @@ reports/*
 /web/dist/
 /web/node_modules/
 /web/.vite/
+
+/web/public/pyodide/
