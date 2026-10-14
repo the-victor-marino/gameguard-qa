@@ -28,6 +28,12 @@ try {
   page.on("requestfailed", req => console.error("[browser network]",req.url(),req.failure()?.errorText));
   console.log("Opening",url);
   await page.goto(url,{waitUntil:"domcontentloaded"});
+  console.log("Rendered title:", await page.title());
+  const header = page.locator(".site-header");
+  if (!(await header.isVisible())) {
+    console.log("Rendered body:", (await page.locator("body").innerText()).slice(0,500));
+    throw new Error("React application was not served at the expected production base path.");
+  }
   await Promise.race([
     page.locator(".engine-indicator.ready").waitFor({timeout:60000}),
     page.locator(".engine-indicator.error").waitFor({timeout:60000}).then(async () => {
@@ -68,4 +74,5 @@ try {
 } finally {
   if(browser) await Promise.race([browser.close(),sleep(8000)]);
   server.kill("SIGTERM");
+  process.exit(process.exitCode || 0);
 }
