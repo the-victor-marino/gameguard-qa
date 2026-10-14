@@ -1,0 +1,94 @@
+name: GameGuard QA Lab — Web
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "game/**"
+      - "gameguard/**"
+      - "tests/**"
+      - "test_data/**"
+      - "docs/**"
+      - "README.md"
+      - ".github/workflows/deploy-web.yml"
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "game/**"
+      - "gameguard/**"
+      - "tests/**"
+      - "test_data/**"
+      - "docs/**"
+      - "README.md"
+      - ".github/workflows/deploy-web.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "gameguard-pages-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  web-build:
+    name: Build and verify interactive website
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install web dependencies
+        working-directory: web
+        run: npm install --no-audit --no-fund
+      - name: Verify real Python source is bundled
+        working-directory: web
+        run: npm run verify
+      - name: Build web application
+        working-directory: web
+        env:
+          GITHUB_PAGES: "true"
+        run: npm run build
+      - name: Install Chromium for browser smoke test
+        working-directory: web
+        run: npx playwright install chromium --with-deps
+      - name: Test real Python labs in browser
+        working-directory: web
+        env:
+          GITHUB_PAGES: "true"
+        run: npm run smoke
+      - name: Upload browser screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameguard-browser-smoke
+          path: web/browser-smoke.png
+          if-no-files-found: ignore
+      - name: Upload built website
+        uses: actions/upload-artifact@v4
+        with:
+          name: gameguard-qa-lab-site
+          path: web/dist/
+      - name: Upload GitHub Pages artifact
+        if: github.event_name != 'pull_request' && github.event.repository.has_pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist/
+
+  deploy:
+    name: Publish on GitHub Pages
+    if: github.event_name != 'pull_request' && github.event.repository.has_pages
+    needs: web-build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
